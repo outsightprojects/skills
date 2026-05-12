@@ -1,0 +1,100 @@
+{
+  "dxt_version": "0.2",
+  "name": "dev-mode-mcp-server-dxt",
+  "display_name": "Figma",
+  "version": "1.0.8",
+  "description": "The Figma MCP server helps you pull in Figma context and generate high-quality code that aligns with your codebase and design intent.",
+  "long_description": "The Figma MCP server helps you pull in Figma context and generate high-quality code that aligns with your codebase and design intent. Use the MCP server to retrieve code resources from Figma Design or Make files, and turn your ideas into production apps.\n\n**Key Features:**\n• **Generate code from selected frames or nodes** - Select a frame in Figma or provide a node URL to have an AI agent turn your design into code.\n• **Extract design context from layers** - Pull out variables, components, and layouts from a design to ensure builds adhere to design patterns.\n• **Code smarter with Code Connect** - Boost output quality by reusing your actual components, the MCP server informs AI agents about existing components derived from Code Connect information.\n\n**Setup and Usage:** The Figma MCP server runs locally on your device and operates only when Dev Mode is active and enabled within a Figma file. You must have the latest version of the Figma desktop app running in order to use this.\n\n**Enable Figma MCP server in Figma App:**\n1. Open your Figma application.\n2. Open a Figma design file.\n3. Access the Dev Mode inspect panel, where you'll find the MCP Server configuration options.\n\n**Authentication:** The Figma MCP server handles authentication through the Figma desktop application. This authentication is managed automatically by Figma when you're logged into the desktop app.\n\n**Developer terms:** Review Figma's [developer terms](https://www.figma.com/legal/developer-terms/)",
+  "author": {
+    "name": "Figma",
+    "email": "support@figma.com",
+    "url": "https://www.figma.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/figma/dev-mode-mcp-server-dxt"
+  },
+  "homepage": "https://www.figma.com",
+  "documentation": "https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Dev-Mode-MCP-Server",
+  "support": "https://help.figma.com",
+  "icon": "icon.png",
+  "privacy_policies": ["https://www.figma.com/legal/privacy/"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ]
+    }
+  },
+  "tools": [
+    {
+      "name": "get_design_context",
+      "description": "Generate UI code for a given node or the currently selected node in the Figma desktop app. Use the nodeId parameter to specify a node id. If no node id is provided, the currently selected node will be used. If a URL is provided, extract the node id from the URL, for example, if given the URL https://figma.com/design/:fileKey/:fileName?node-id=1-2, the extracted nodeId would be `1:2`."
+    },
+    {
+      "name": "get_screenshot",
+      "description": "Generate a screenshot for a given node or the currently selected node in the Figma desktop app. Use the nodeId parameter to specify a node id. If no node id is provided, the currently selected node will be used. If a URL is provided, extract the node id from the URL, for example, if given the URL https://figma.com/design/:fileKey/:fileName?node-id=1-2, the extracted nodeId would be `1:2`."
+    },
+    {
+      "name": "get_metadata",
+      "description": "Get metadata for a node or page in the Figma desktop app in XML format. Useful only for getting an overview of the structure, it only includes node IDs, layer types, names, positions and sizes. You can call get_design_context on the node IDs contained in this response. Use the nodeId parameter to specify a node id, it can also be the page id (e.g. 0:1). If no node id is provided, the currently selected node will be used. If a URL is provided, extract the node id from the URL, for example, if given the URL https://figma.com/design/:fileKey/:fileName?node-id=1-2, the extracted nodeId would be `1:2`."
+    },
+    {
+      "name": "get_variable_defs",
+      "description": "Get variable definitions for a given node id. E.g. {'icon/default/secondary': #949494}. Variables are reusable values that can be applied to all kinds of design properties, such as fonts, colors, sizes and spacings. Use the nodeId parameter to specify a node id. If no node id is provided, the currently selected node will be used. If a URL is provided, extract the node id from the URL, for example, if given the URL https://figma.com/design/:fileKey/:fileName?node-id=1-2, the extracted nodeId would be `1:2`"
+    },
+    {
+      "name": "get_code_connect_map",
+      "description": "Get a mapping of {[nodeId]: {codeConnectSrc: e.g. location of component in codebase, codeConnectName: e.g. name of component in codebase}. E.g. {'1:2': { codeConnectSrc: 'https://github.com/foo/components/Button.tsx', codeConnectName: 'Button' } }. Use the nodeId parameter to specify a node id. If no node id is provided, the currently selected node will be used. If a URL is provided, extract the node id from the URL, for example, if given the URL https://figma.com/design/:fileKey/:fileName?node-id=1-2, the extracted nodeId would be `1:2`"
+    },
+    {
+      "name": "add_code_connect_map",
+      "description": "Map the currently selected Figma node (or a node specified by nodeId) to a code component in your codebase using Code Connect."
+    },
+    {
+      "name": "create_design_system_rules",
+      "description": "Provides a prompt to generate design system rules for this repo."
+    }
+  ],
+  "prompts": [
+    {
+      "name": "get_code_for_selection",
+      "description": "Prompt to generate code for the currently selected design elements in Figma",
+      "arguments": [],
+      "text": "Prompt to generate code for the currently selected design elements in Figma"
+    },
+    {
+      "name": "create_design_system_rules",
+      "description": "Provides a prompt to generate design system rules for this repo.",
+      "arguments": [],
+      "text": "Please analyze this codebase thoroughly and provide a comprehensive rules doc for your use (e.g. CLAUDE.md, .cursor/rules/design_system_rules.mdc file) on the following aspects to help integrate Figma designs using the Model Context Protocol:\n\n## Design System Structure\n\n1. **Token Definitions**\n   - Where are design tokens (colors, typography, spacing, etc.) defined?\n   - What format/structure is used for tokens?\n   - Are there any token transformation systems in place?\n\n2. **Component Library**\n   - Where are UI components defined?\n   - What component architecture is used?\n   - Are there any component documentation or storybooks?\n\n3. **Frameworks & Libraries**\n   - What UI frameworks are used (React, Vue, etc.)?\n   - What styling libraries/frameworks are used?\n   - What build system and bundler are used?\n\n4. **Asset Management**\n   - How are assets (images, videos, etc.) stored and referenced?\n   - What asset optimization techniques are used?\n   - Are there any CDN configurations?\n\n5. **Icon System**\n   - Where are icons stored?\n   - How are icons imported and used in components?\n   - Is there an icon naming convention?\n\n6. **Styling Approach**\n   - What CSS methodology is used (CSS Modules, Styled Components, etc.)?\n   - Are there global styles?\n   - How are responsive designs implemented?\n\n7. **Project Structure**\n   - What is the overall organization of the codebase?\n   - Are there any specific patterns for feature organization?\n\nProvide your analysis as structured markdown with code snippets demonstrating key patterns. Include file paths where relevant."
+    }
+  ],
+  "tools_generated": true,
+  "prompts_generated": true,
+  "keywords": [
+    "figma",
+    "desktop",
+    "design",
+    "prototyping",
+    "mcp",
+    "design to code",
+    "html",
+    "css"
+  ],
+  "license": "MIT",
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=16.0.0"
+    }
+  }
+}
