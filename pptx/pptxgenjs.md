@@ -35,6 +35,9 @@ slide.addText("Simple Text", {
   color: "363636", bold: true, align: "center", valign: "middle"
 });
 
+// Character spacing (use charSpacing, not letterSpacing which is silently ignored)
+slide.addText("SPACED TEXT", { x: 1, y: 1, w: 8, h: 1, charSpacing: 6 });
+
 // Rich text arrays
 slide.addText([
   { text: "Bold ", options: { bold: true } },
@@ -98,7 +101,34 @@ slide.addShape(pres.shapes.RECTANGLE, {
   x: 1, y: 1, w: 3, h: 2,
   fill: { color: "0088CC", transparency: 50 }
 });
+
+// Rounded rectangle (rectRadius only works with ROUNDED_RECTANGLE, not RECTANGLE)
+// ⚠️ Don't pair with rectangular accent overlays — they won't cover rounded corners. Use RECTANGLE instead.
+slide.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+  x: 1, y: 1, w: 3, h: 2,
+  fill: { color: "FFFFFF" }, rectRadius: 0.1
+});
+
+// With shadow
+slide.addShape(pres.shapes.RECTANGLE, {
+  x: 1, y: 1, w: 3, h: 2,
+  fill: { color: "FFFFFF" },
+  shadow: { type: "outer", color: "000000", blur: 6, offset: 2, angle: 135, opacity: 0.15 }
+});
 ```
+
+Shadow options:
+
+| Property | Type | Range | Notes |
+|----------|------|-------|-------|
+| `type` | string | `"outer"`, `"inner"` | |
+| `color` | string | 6-char hex (e.g. `"000000"`) | No `#` prefix, no 8-char hex — see Common Pitfalls |
+| `blur` | number | 0-100 pt | |
+| `offset` | number | 0-200 pt | **Must be non-negative** — negative values corrupt the file |
+| `angle` | number | 0-359 degrees | Direction the shadow falls (135 = bottom-right, 270 = upward) |
+| `opacity` | number | 0.0-1.0 | Use this for transparency, never encode in color string |
+
+To cast a shadow upward (e.g. on a footer bar), use `angle: 270` with a positive offset — do **not** use a negative offset.
 
 **Note**: Gradient fills are not natively supported. Use a gradient image as a background instead.
 
@@ -343,15 +373,32 @@ titleSlide.addText("My Title", { placeholder: "title" });
    color: "#FF0000"     // ❌ WRONG
    ```
 
-2. **Use `bullet: true`** - NEVER unicode symbols like "•" (creates double bullets)
+2. **NEVER encode opacity in hex color strings** - 8-char colors (e.g., `"00000020"`) corrupt the file. Use the `opacity` property instead.
+   ```javascript
+   shadow: { type: "outer", blur: 6, offset: 2, color: "00000020" }          // ❌ CORRUPTS FILE
+   shadow: { type: "outer", blur: 6, offset: 2, color: "000000", opacity: 0.12 }  // ✅ CORRECT
+   ```
 
-3. **Use `breakLine: true`** between array items or text runs together
+3. **Use `bullet: true`** - NEVER unicode symbols like "•" (creates double bullets)
 
-4. **Avoid `lineSpacing` with bullets** - causes excessive gaps; use `paraSpaceAfter` instead
+4. **Use `breakLine: true`** between array items or text runs together
 
-5. **Each presentation needs fresh instance** - don't reuse `pptxgen()` objects
+5. **Avoid `lineSpacing` with bullets** - causes excessive gaps; use `paraSpaceAfter` instead
 
-6. **Don't use `ROUNDED_RECTANGLE` with accent borders** - rectangular overlay bars won't cover rounded corners. Use `RECTANGLE` instead.
+6. **Each presentation needs fresh instance** - don't reuse `pptxgen()` objects
+
+7. **NEVER reuse option objects across calls** - PptxGenJS mutates objects in-place (e.g. converting shadow values to EMU). Sharing one object between multiple calls corrupts the second shape.
+   ```javascript
+   const shadow = { type: "outer", blur: 6, offset: 2, color: "000000", opacity: 0.15 };
+   slide.addShape(pres.shapes.RECTANGLE, { shadow, ... });  // ❌ second call gets already-converted values
+   slide.addShape(pres.shapes.RECTANGLE, { shadow, ... });
+
+   const makeShadow = () => ({ type: "outer", blur: 6, offset: 2, color: "000000", opacity: 0.15 });
+   slide.addShape(pres.shapes.RECTANGLE, { shadow: makeShadow(), ... });  // ✅ fresh object each time
+   slide.addShape(pres.shapes.RECTANGLE, { shadow: makeShadow(), ... });
+   ```
+
+8. **Don't use `ROUNDED_RECTANGLE` with accent borders** - rectangular overlay bars won't cover rounded corners. Use `RECTANGLE` instead.
    ```javascript
    // ❌ WRONG: Accent bar doesn't cover rounded corners
    slide.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 1, y: 1, w: 3, h: 1.5, fill: { color: "FFFFFF" } });

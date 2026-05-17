@@ -134,7 +134,7 @@ Choose colors that match your topic — don't default to generic blue. Use these
 - **Don't create text-only slides** — add images, icons, charts, or visual elements; avoid plain title + bullets
 - **Don't forget text box padding** — when aligning lines or shapes with text edges, set `margin: 0` on the text box or offset the shape to account for padding
 - **Don't use low-contrast elements** — icons AND text need strong contrast against the background; avoid light text on light backgrounds or dark text on dark backgrounds
-- **NEVER use horizontal lines to seperate title and body** — use whitespace or background color instead
+- **NEVER use accent lines under titles** — these are a hallmark of AI-generated slides; use whitespace or background color instead
 
 ---
 
@@ -155,7 +155,7 @@ Check for missing content, typos, wrong order.
 **When using templates, check for leftover placeholder text:**
 
 ```bash
-python -m markitdown output.pptx | grep -iE "xxxx|lorem|ipsum|this.*(page|slide).*layout"
+python -m markitdown output.pptx | grep -iE "\bx{3,}\b|lorem|ipsum|\bTODO|\[insert|this.*(page|slide).*layout"
 ```
 
 If grep returns results, fix them before declaring success.
@@ -185,9 +185,10 @@ Look for:
 
 For each slide, list issues or areas of concern, even if minor.
 
-Read and analyze these images:
-1. /path/to/slide-01.jpg (Expected: [brief description])
-2. /path/to/slide-02.jpg (Expected: [brief description])
+Read and analyze these images — run `ls -1 "$PWD"/slide-*.jpg` and use the exact absolute paths it prints:
+1. <absolute-path>/slide-N.jpg — (Expected: [brief description])
+2. <absolute-path>/slide-N.jpg — (Expected: [brief description])
+...
 
 Report ALL issues found, including minor ones.
 ```
@@ -210,16 +211,14 @@ Convert presentations to individual slide images for visual inspection:
 
 ```bash
 python scripts/office/soffice.py --headless --convert-to pdf output.pptx
+rm -f slide-*.jpg
 pdftoppm -jpeg -r 150 output.pdf slide
+ls -1 "$PWD"/slide-*.jpg
 ```
 
-This creates `slide-01.jpg`, `slide-02.jpg`, etc.
+**Pass the absolute paths printed above directly to the view tool.** The `rm` clears stale images from prior runs. `pdftoppm` zero-pads based on page count: `slide-1.jpg` for decks under 10 pages, `slide-01.jpg` for 10-99, `slide-001.jpg` for 100+.
 
-To re-render specific slides after fixes:
-
-```bash
-pdftoppm -jpeg -r 150 -f N -l N output.pdf slide-fixed
-```
+**After fixes, rerun all four commands above** — the PDF must be regenerated from the edited `.pptx` before `pdftoppm` can reflect your changes.
 
 ---
 
