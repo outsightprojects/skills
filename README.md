@@ -33,26 +33,42 @@ Alles unter `extras/` ist Ablage und wird nicht synchronisiert.
 `skill-creator` (CLI/superpowers), `skill-creator-cowork` (Desktop-Variante),
 `skills-browser`, `xlsx`
 
-## Sync
+## Sync — drei Wege
+
+**1. Automatisch (Standard):** Ein git **post-commit Hook**
+(`extras/hooks/post-commit`, aktiviert via `core.hooksPath`) pusht nach
+*jedem* Commit automatisch nach Claude Desktop. Nichts zu tun außer
+committen — danach Claude Desktop neu starten.
+
+**2. Konversationell:** Der `sync-skills` Skill — einfach „sync my skills"
+oder „are my skills in sync" sagen, Claude führt `sync.sh` aus.
+
+**3. Manuell:**
 
 ```bash
-./sync.sh status   # (default) zeigt Unterschiede Repo <-> Desktop, read-only
+./sync.sh status   # (default) Unterschiede Repo <-> Desktop, read-only
 ./sync.sh push     # Repo  -> Desktop  (Repo gewinnt, spiegelt jeden Skill)
 ./sync.sh pull     # Desktop -> Repo   (additiv; danach git diff + commit)
 ```
 
-Der Desktop-Pfad wird per Glob erkannt und überlebt UUID-Wechsel. Anthropic
-aktualisiert manche Skills (z. B. `docx`, `pptx`, `skill-creator`) selbst —
-um Churn zu vermeiden, in `sync.sh` die Variable `SYNC_EXCLUDE` setzen:
+Der Desktop-Pfad wird per Glob erkannt und überlebt UUID-Wechsel. Hook und
+manuelle Pushes überspringen standardmäßig die Anthropic-verwalteten Skills
+`docx`, `pptx`, `skill-creator` (`SYNC_EXCLUDE`), damit Desktop-seitige
+Updates von Anthropic nicht überschrieben werden. Diese trotzdem mitsyncen:
 
 ```bash
-SYNC_EXCLUDE="docx pptx skill-creator" ./sync.sh push
+SYNC_EXCLUDE="" ./sync.sh push
 ```
+
+Frische Klone: `git config core.hooksPath extras/hooks` einmalig setzen,
+damit der Auto-Sync-Hook aktiv ist.
 
 ## Workflow
 
 1. Skill bearbeiten/anlegen → in `<skill>/SKILL.md`
-2. `./sync.sh push` → in Claude Desktop übernehmen, Desktop neu starten
-3. `git add -A && git commit && git push` → auf GitHub sichern
+2. `git add -A && git commit` → Hook pusht automatisch nach Desktop
+3. `git push` → auf GitHub sichern
+4. Claude Desktop neu starten, damit die Änderungen geladen werden
 
-Skill in Desktop geändert? → `./sync.sh pull`, `git diff` prüfen, committen.
+Skill in Desktop geändert? → „sync my skills" (pull) oder `./sync.sh pull`,
+`git diff` prüfen, committen.

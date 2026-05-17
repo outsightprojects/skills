@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# post-commit — auto-sync skills to Claude Desktop after every commit.
+#
+# Installed via:  git config core.hooksPath extras/hooks
+# Versioned in the repo so it travels with clones.
+#
+# Skips Anthropic-managed skills that Desktop auto-updates, so the hook
+# never clobbers upstream Desktop updates. Override by editing SYNC_EXCLUDE
+# or running ./sync.sh push manually with SYNC_EXCLUDE="".
+
+REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+[ -x "$REPO_DIR/sync.sh" ] || exit 0
+
+export SYNC_EXCLUDE="${SYNC_EXCLUDE:-docx pptx skill-creator}"
+
+echo "[post-commit] syncing skills -> Claude Desktop ..."
+if ( cd "$REPO_DIR" && ./sync.sh push ); then
+  echo "[post-commit] done (restart Claude Desktop to load changes)"
+else
+  echo "[post-commit] skipped (Claude Desktop skills dir not found) — not fatal"
+fi
+exit 0
